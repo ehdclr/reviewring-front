@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { useRouter } from 'next/navigation';
+import { useToast } from "@/hooks/use-toast"
 
 export default function SignUp() {
   const [email, setEmail] = useState('')
@@ -13,22 +15,52 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [name, setName] = useState('')
   const [nickname, setNickname] = useState('')
-  const [phoneNumber, setPhoneNumber] = useState('')
+  const [phone, setPhone] = useState('')
   const [passwordStrength, setPasswordStrength] = useState(0)
   const [isEmailValid, setIsEmailValid] = useState(false)
   const [isEmailAvailable, setIsEmailAvailable] = useState(true)
   const [isNicknameAvailable, setIsNicknameAvailable] = useState(true)
   const [isPhoneNumberValid, setIsPhoneNumberValid] = useState(false)
-
+  const { toast } = useToast()
+  const router = useRouter()
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement sign up logic
-    console.log('Sign up attempt with:', { email, password, confirmPassword, name, nickname, phoneNumber })
+    try {
+      const response = await fetch('/api/user/signup', {
+        method: 'POST',
+        body: JSON.stringify({ email, password, name, nickname, phone }),
+      })
+
+    const data = await response.json()
+
+    if (data.error) {
+        toast({
+          variant: "destructive",
+          title: "회원가입 실패",
+          description: data.error,
+        })
+        window.location.reload()
+    } else {
+      toast({
+        title: "회원가입 성공",
+        description: "로그인 페이지로 이동합니다.",
+      })
+      router.push('/signin')
+    }
+  } catch {
+    toast({
+      variant: "destructive",
+      title: "오류 발생",
+      description: "회원가입 중 문제가 발생했습니다. 다시 시도해주세요.",
+    })
+    window.location.reload()
   }
+}
 
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value.replace(/\D/g, '').slice(0, 11) //숫자만 입력
-    setPhoneNumber(input)
+    setPhone(input)
     setIsPhoneNumberValid(validatePhoneNumber(input))
   }
 
@@ -194,17 +226,17 @@ export default function SignUp() {
                 type="tel"
                 autoComplete="tel"
                 required
-                value={phoneNumber}
+                value={phone}
                 onChange={handlePhoneNumberChange}
                 className="w-full"
                 placeholder="'-' 없이 숫자만 입력해주세요"
               />
-              {phoneNumber &&(
+              {phone &&(
                 <p className="text-sm text-gray-500">
-                    형식 : {formatPhoneNumber(phoneNumber)}
+                    형식 : {formatPhoneNumber(phone)}
                 </p>
               )}
-              {phoneNumber && !isPhoneNumberValid && (
+              {phone && !isPhoneNumberValid && (
                 <p className='text-sm text-red-500'>
                     유효한 전화번호를 입력해주세요.
                 </p>

@@ -24,7 +24,7 @@ import { X, Plus, Upload, Camera } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-
+import Image from "next/image";
 interface PricingInfo {
   basePrice: number;
   currency: string;
@@ -268,7 +268,7 @@ export default function RegisterMentor() {
             <div className="flex flex-col items-center mb-6">
               <div className="relative w-40 h-40 mb-4">
                 {formData.image ? (
-                  <img
+                  <Image
                     src={URL.createObjectURL(formData.image)}
                     alt="Profile preview"
                     className="w-full h-full rounded-full object-cover"
@@ -619,7 +619,7 @@ export default function RegisterMentor() {
                                         name: "current",
                                         value: e.target.checked,
                                       },
-                                    } as any,
+                                    } as unknown as any,
                                     "experiences",
                                     index
                                   )

@@ -43,6 +43,7 @@ export default function SignIn() {
         // 여기서 zustand로 로그인 상태 관리
       }
     } catch (error) {
+      console.error('로그인 중 오류가 발생했습니다:', error);
       setError('로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
     } finally {
       setIsLoading(false);
