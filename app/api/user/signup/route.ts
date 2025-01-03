@@ -16,6 +16,8 @@ const CREATE_USER_MUTATION = gql`
       name
       nickname
       phone
+      success
+      message
     }
   }
 `;
@@ -50,6 +52,6 @@ export async function POST(req: NextRequest) {
     
     return NextResponse.json({ 
       error: errorMessage 
-    }, { status: 400 });
+    }, { status: 500 });
   }
 }

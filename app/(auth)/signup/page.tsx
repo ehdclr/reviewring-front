@@ -16,7 +16,6 @@ export default function SignUp() {
   const [name, setName] = useState('')
   const [nickname, setNickname] = useState('')
   const [phone, setPhone] = useState('')
-  const [errors, setErrors] = useState<{[key: string]: string}>({})
   const [passwordStrength, setPasswordStrength] = useState(0)
   const [isEmailValid, setIsEmailValid] = useState(false)
   const [isEmailAvailable, setIsEmailAvailable] = useState(true)
@@ -27,7 +26,7 @@ export default function SignUp() {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setErrors({})
+    
 
     try {
       const response = await fetch('/api/user/signup', {
@@ -42,7 +41,6 @@ export default function SignUp() {
 
       if (!response.ok) {
         if (data.errors) {
-          setErrors(data.errors)
           toast({
             variant: "destructive",
             title: "회원가입 실패",
@@ -99,15 +97,51 @@ export default function SignUp() {
   }
 
   const checkEmailAvailability = async () => {
-    // TODO: Implement email availability check
-    console.log('Checking email availability:', email)
-    setIsEmailAvailable(true) // Placeholder: assume email is available
+    //이메일 중복확인
+    const response = await fetch('/api/user/validate-email', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    })
+    const data = await response.json()
+    console.log(data)
+    if (!data.success) {
+      setIsEmailAvailable(false)
+      toast({
+        variant: "destructive",
+        title: data.message,
+        description: data.message,
+      })
+    } else {
+      setIsEmailAvailable(true)
+      toast({
+        title: "이메일 중복확인 성공",
+        description: "사용 가능한 이메일입니다.",
+      })
+    }
   }
 
   const checkNicknameAvailability = async () => {
-    // TODO: Implement nickname availability check
-    console.log('Checking nickname availability:', nickname)
-    setIsNicknameAvailable(true) // Placeholder: assume nickname is available
+    //닉네임 중복확인
+    const response = await fetch('/api/user/validate-nickname', {
+      method: 'POST',
+      body: JSON.stringify({ nickname }),
+    })
+    const data = await response.json()
+    console.log(data)
+    if (!data.success) {
+      setIsNicknameAvailable(false)
+      toast({
+        variant: "destructive",
+        title: data.message,
+        description: data.message,
+      })
+    } else {
+      setIsNicknameAvailable(true)
+      toast({
+        title: "닉네임 중복확인 성공",
+        description: "사용 가능한 닉네임입니다.",
+      })
+    }
   }
 
   const validatePhoneNumber = (phoneNumber: string) => {
