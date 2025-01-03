@@ -16,6 +16,7 @@ export default function SignUp() {
   const [name, setName] = useState('')
   const [nickname, setNickname] = useState('')
   const [phone, setPhone] = useState('')
+  const [errors, setErrors] = useState<{[key: string]: string}>({})
   const [passwordStrength, setPasswordStrength] = useState(0)
   const [isEmailValid, setIsEmailValid] = useState(false)
   const [isEmailAvailable, setIsEmailAvailable] = useState(true)
@@ -26,37 +27,45 @@ export default function SignUp() {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setErrors({})
+
     try {
       const response = await fetch('/api/user/signup', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ email, password, name, nickname, phone }),
       })
 
-    const data = await response.json()
+      const data = await response.json()
 
-    if (data.error) {
+      if (!response.ok) {
+        if (data.errors) {
+          setErrors(data.errors)
+          toast({
+            variant: "destructive",
+            title: "회원가입 실패",
+            description: "입력 정보를 확인해주세요.",
+          })
+        } else {
+          throw new Error(data.message || '회원가입 중 오류가 발생했습니다.')
+        }
+      } else {
         toast({
-          variant: "destructive",
-          title: "회원가입 실패",
-          description: data.error,
+          title: "회원가입 성공",
+          description: "로그인 페이지로 이동합니다.",
         })
-        window.location.reload()
-    } else {
+        router.push('/signin')
+      }
+    } catch (error) {
       toast({
-        title: "회원가입 성공",
-        description: "로그인 페이지로 이동합니다.",
+        variant: "destructive",
+        title: "오류 발생",
+        description: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.",
       })
-      router.push('/signin')
     }
-  } catch {
-    toast({
-      variant: "destructive",
-      title: "오류 발생",
-      description: "회원가입 중 문제가 발생했습니다. 다시 시도해주세요.",
-    })
-    window.location.reload()
   }
-}
 
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value.replace(/\D/g, '').slice(0, 11) //숫자만 입력
