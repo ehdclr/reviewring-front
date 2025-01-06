@@ -103,8 +103,16 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/signin",
+    signOut: "/signout",
+  },
+  session: {
+    strategy: "jwt",
   },
 };
+
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error("NEXTAUTH_SECRET is not set");
+}
 
 const handler = NextAuth(authOptions);
 
