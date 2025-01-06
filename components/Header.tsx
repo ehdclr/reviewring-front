@@ -14,7 +14,7 @@ import { UserCircle, LogOut, FileText, Star, Users } from "lucide-react";
 export default function Header() {
   const { data: session } = useSession();
 
-  //TODO 로그인 된 상태에서는 Dashboard 페이지로 리다이렉트
+ //로그아웃 next-auth
 
   return (
     <header className="bg-[#1A1B1E] text-white">
