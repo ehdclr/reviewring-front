@@ -40,7 +40,6 @@ export default function SignIn() {
         setError('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
       } else {
         router.replace('/dashboard');
-        // 여기서 zustand로 로그인 상태 관리
       }
     } catch (error) {
       console.error('로그인 중 오류가 발생했습니다:', error);

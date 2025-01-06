@@ -1,21 +1,48 @@
-import NextAuth, { DefaultSession } from "next-auth";
+import NextAuth, { DefaultSession, NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { client } from "@/lib/apollo-client";
+import { gql } from "@apollo/client";
+
+const LOGIN_MUTATION = gql`
+  mutation Login($email: String!, $password: String!) {
+    login(loginInput: { email: $email, password: $password }) {
+      user {
+        id
+        email
+        name
+        nickname
+        phone
+      }
+      success
+      message
+      accessToken
+    }
+  }
+`;
 
 declare module "next-auth" {
   interface Session {
     user: {
       id: string;
+      email: string;
+      name: string;
+      nickname: string;
+      phone: string;
       accessToken: string;
     } & DefaultSession["user"];
   }
 
   interface User {
     id: string;
+    email: string;
+    name: string;
+    nickname: string;
+    phone: string;
     accessToken: string;
   }
 }
 
-const handler = NextAuth({
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -23,50 +50,29 @@ const handler = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      //   async authorize(credentials) {
-      //     if (!credentials?.email || !credentials?.password) {
-      //       return null
-      //     }
-
-      //     try {
-      //       const res = await fetch(`${process.env.BACKEND_URL}/api/auth/login`, {
-      //         method: 'POST',
-      //         headers: {
-      //           'Content-Type': 'application/json',
-      //         },
-      //         body: JSON.stringify({
-      //           email: credentials.email,
-      //           password: credentials.password,
-      //         }),
-      //       })
-
-      //       const data = await res.json()
-
-      //       if (res.ok && data.accessToken) {
-      //         return { accessToken: data.accessToken, id: data.user.id }
-      //       } else {
-      //         throw new Error('로그인 실패!')
-      //       }
-      //     } catch (error) {
-      //       console.error('로그인 실패!', error)
-      //       throw new Error('로그인 실패!')
-      //     }
-      //   }
-
-      //TODO 더미 데이터
-      authorize(credentials) {
-        if (
-          credentials?.email === "test@test.com" &&
-          credentials?.password === "test1234"
-        ) {
-          return {
-            id: "1",
-            name: "Test User",
-            email: "test@test.com",
-            accessToken: "dummy_access_token",
-          };
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("이메일과 비밀번호를 입력해주세요.");
         }
-        return null;
+
+        try {
+          const response = await client.mutate({
+            mutation: LOGIN_MUTATION,
+            variables: {
+              email: credentials.email,
+              password: credentials.password,
+            },
+          });
+          if (response.data?.login.success) {
+            const { id, email, name, nickname, phone, accessToken } = response.data.login.user;
+            return { id, email, name, nickname, phone, accessToken };
+          } else {
+            throw new Error(response.data?.login.message || "로그인에 실패했습니다.");
+          }
+        } catch (error) {
+          console.error('로그인 실패!', error);
+          throw new Error(error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.");
+        }
       },
     }),
   ],
@@ -74,21 +80,32 @@ const handler = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
+        token.nickname = user.nickname;
+        token.phone = user.phone;
         token.accessToken = user.accessToken;
       }
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.accessToken = token.accessToken as string;
-      }
+      session.user = {
+        ...session.user,
+        id: token.id as string,
+        email: token.email as string,
+        name: token.name as string,
+        nickname: token.nickname as string,
+        phone: token.phone as string,
+        accessToken: token.accessToken as string,
+      };
       return session;
     },
   },
   pages: {
     signIn: "/signin",
   },
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

@@ -285,7 +285,7 @@ export default function SignUp() {
                 </p>
               )}
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={!isEmailValid || !isNicknameAvailable || !isPhoneNumberValid || !password || !confirmPassword || !name}>
               회원가입
             </Button>
           </form>
