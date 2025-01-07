@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { UserCircle, LogOut, FileText, Star, Users } from "lucide-react";
+import { UserRound ,UserCircle, LogOut, FileText, Star, Users } from "lucide-react";
 
 export default function Header() {
   const { data: session } = useSession();
@@ -54,7 +54,7 @@ export default function Header() {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuItem asChild>
                     <Link href={`/user/${session.user.id}`} className="flex items-center">
-                      <FileText className="w-4 h-4 mr-2" />
+                      <UserRound className="w-4 h-4 mr-2" />
                       마이 페이지
                     </Link>
                   </DropdownMenuItem>
