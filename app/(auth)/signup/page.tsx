@@ -29,7 +29,7 @@ export default function SignUp() {
     
 
     try {
-      const response = await fetch('/api/user/signup', {
+      const response = await fetch('/api/users/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,7 +98,7 @@ export default function SignUp() {
 
   const checkEmailAvailability = async () => {
     //이메일 중복확인
-    const response = await fetch('/api/user/validate-email', {
+    const response = await fetch('/api/users/validate-email', {
       method: 'POST',
       body: JSON.stringify({ email }),
     })
@@ -122,7 +122,7 @@ export default function SignUp() {
 
   const checkNicknameAvailability = async () => {
     //닉네임 중복확인
-    const response = await fetch('/api/user/validate-nickname', {
+    const response = await fetch('/api/users/validate-nickname', {
       method: 'POST',
       body: JSON.stringify({ nickname }),
     })
