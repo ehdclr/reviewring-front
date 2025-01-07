@@ -53,6 +53,12 @@ export default function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuItem asChild>
+                    <Link href={`/user/${session.user.id}`} className="flex items-center">
+                      <FileText className="w-4 h-4 mr-2" />
+                      마이 페이지
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link href="/dashboard" className="flex items-center">
                       <FileText className="w-4 h-4 mr-2" />
                       내 이력서
