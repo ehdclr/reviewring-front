@@ -1,11 +1,22 @@
 "use client";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Camera, Loader2, User } from "lucide-react";
 import { useParams } from "next/navigation";
@@ -22,6 +33,7 @@ interface User {
 
 export default function UserPage() {
   const { id } = useParams();
+  const { toast } = useToast();
   const [userData, setUserData] = useState<User>({
     id: 0,
     email: "",
@@ -32,6 +44,9 @@ export default function UserPage() {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [formData, setFormData] = useState<User | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -42,17 +57,25 @@ export default function UserPage() {
         if (data.success) {
           setUserData(data.payload);
         } else {
-          console.error("사용자 정보를 가져오는 중 오류 발생:", data.message);
+          toast({
+            variant: "destructive",
+            title: "오류",
+            description: "사용자 정보를 가져오는데 실패했습니다.",
+          });
         }
       } catch (err) {
-        console.error("사용자 정보를 가져오는 중 오류 발생:", err);
+        toast({
+          variant: "destructive",
+          title: "오류",
+          description: "사용자 정보를 가져오는데 실패했습니다.",
+        });
       }
     };
 
     if (id) {
       fetchUserData();
     }
-  }, [id]);
+  }, [id, toast]);
 
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -64,8 +87,16 @@ export default function UserPage() {
       setIsUploading(true);
       const imageUrl = URL.createObjectURL(file);
       setUserData((prev) => ({ ...prev, profileImage: imageUrl }));
+      toast({
+        title: "이미지 업로드 완료",
+        description: "프로필 이미지가 업데이트되었습니다.",
+      });
     } catch (error) {
-      console.error("Error uploading image:", error);
+      toast({
+        variant: "destructive",
+        title: "이미지 업로드 실패",
+        description: "이미지 업로드 중 오류가 발생했습니다.",
+      });
     } finally {
       setIsUploading(false);
     }
@@ -73,10 +104,50 @@ export default function UserPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setFormData(userData);
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmSave = async () => {
+    if (!formData) return;
+
     try {
-      console.log("사용자 정보 수정 api 호출해야됨");
-    } catch (err) {
-      console.error("사용자 정보를 업데이트하는 중 오류 발생:", err);
+      setIsSaving(true);
+      // API call to backend
+      const response = await fetch(`/api/users/${Number(id)}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update profile");
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast({
+          title: "수정 완료",
+          description: "프로필 정보가 성공적으로 업데이트되었습니다.",
+        });
+        setUserData(formData);
+        setIsEditing(false);
+      } else {
+        throw new Error(data.message || "Failed to update profile");
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "수정 실패",
+        description: "프로필 정보 업데이트 중 오류가 발생했습니다.",
+      });
+      setIsEditing(true);
+    } finally {
+      setIsSaving(false);
+      setShowConfirmDialog(false);
     }
   };
 
@@ -104,8 +175,14 @@ export default function UserPage() {
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <div className="text-white flex flex-col items-center gap-1">
-                      <Camera className="w-6 h-6" />
-                      <span className="text-xs">변경</span>
+                      {isUploading ? (
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                      ) : (
+                        <>
+                          <Camera className="w-6 h-6" />
+                          <span className="text-xs">변경</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 )}
@@ -193,9 +270,9 @@ export default function UserPage() {
                       <Button
                         type="submit"
                         className="w-24"
-                        disabled={isUploading}
+                        disabled={isUploading || isSaving}
                       >
-                        {isUploading ? (
+                        {isSaving ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
                           "저장"
@@ -206,7 +283,7 @@ export default function UserPage() {
                         variant="outline"
                         onClick={() => setIsEditing(false)}
                         className="w-24"
-                        disabled={isUploading}
+                        disabled={isUploading || isSaving}
                       >
                         취소
                       </Button>
@@ -225,6 +302,26 @@ export default function UserPage() {
             </div>
           </CardContent>
         </Card>
+
+        <AlertDialog
+          open={showConfirmDialog}
+          onOpenChange={setShowConfirmDialog}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>프로필 수정</AlertDialogTitle>
+              <AlertDialogDescription>
+                프로필 정보를 수정하시겠습니까?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isSaving}>취소</AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfirmSave}>
+                확인
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
