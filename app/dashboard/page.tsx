@@ -1,12 +1,12 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Star, Upload, Clock, Briefcase } from "lucide-react";
+import { Briefcase, Clock, FileText, Star, Upload } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export default function Dashboard() {
   const { data: session } = useSession();
@@ -21,7 +21,7 @@ export default function Dashboard() {
           </p>
         </div>
         <Button asChild>
-          <Link href="/upload-resume">
+          <Link href="/resume/submit">
             <Upload className="w-4 h-4 mr-2" />새 이력서 업로드
           </Link>
         </Button>
