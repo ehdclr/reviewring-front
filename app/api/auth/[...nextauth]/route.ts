@@ -1,7 +1,7 @@
-import NextAuth, { DefaultSession, NextAuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
 import { client } from "@/lib/apollo-client";
 import { gql } from "@apollo/client";
+import NextAuth, { DefaultSession, NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 
 const LOGIN_MUTATION = gql`
   mutation Login($email: String!, $password: String!) {
@@ -51,6 +51,20 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
+        if (
+          credentials?.email === process.env.NEXTAUTH_ADMIN_EMAIL &&
+          credentials?.password === process.env.NEXTAUTH_ADMIN_PASSWORD
+        ) {
+          return {
+            id: 1,
+            email: credentials?.email,
+            name: "시스템 관리자",
+            nickname: "LINK 관리자",
+            phone: "000-0000-0000",
+            accessToken: "admin-access-Token",
+          };
+        }
+
         if (!credentials?.email || !credentials?.password) {
           throw new Error("이메일과 비밀번호를 입력해주세요.");
         }
@@ -64,14 +78,21 @@ export const authOptions: NextAuthOptions = {
             },
           });
           if (response.data?.login.success) {
-            const { id, email, name, nickname, phone, accessToken } = response.data.login.user;
+            const { id, email, name, nickname, phone, accessToken } =
+              response.data.login.user;
             return { id, email, name, nickname, phone, accessToken };
           } else {
-            throw new Error(response.data?.login.message || "로그인에 실패했습니다.");
+            throw new Error(
+              response.data?.login.message || "로그인에 실패했습니다."
+            );
           }
         } catch (error) {
-          console.error('로그인 실패!', error);
-          throw new Error(error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.");
+          console.error("로그인 실패!", error);
+          throw new Error(
+            error instanceof Error
+              ? error.message
+              : "알 수 없는 오류가 발생했습니다."
+          );
         }
       },
     }),
