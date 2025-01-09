@@ -15,20 +15,11 @@ import {
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { dummyCategories } from "@/datas/categories";
 import { dummyMentors } from "@/datas/mentors";
-import type { Category, Mentor } from "@/types/mentor";
+import { Category, type Mentor } from "@/types/mentor";
 import { FileText, MessageSquare, Star } from "lucide-react";
 import { useEffect, useState } from "react";
-
-// 임시 카테고리 데이터
-const categories: Category[] = [
-  { id: 1, type: "all", name: "전체" },
-  { id: 2, type: "frontend", name: "프론트엔드" },
-  { id: 3, type: "backend", name: "백엔드" },
-  { id: 4, type: "mobile", name: "모바일" },
-  { id: 5, type: "design", name: "디자인" },
-  { id: 6, type: "pm", name: "기획/PM" },
-];
 
 export default function MentorList() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -40,6 +31,7 @@ export default function MentorList() {
     "mentoring" | "resumeReview"
   >("mentoring");
   const [mentors, setMentors] = useState<Mentor[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -49,14 +41,25 @@ export default function MentorList() {
         // const response = await fetch("/api/mentors");
         // const data = await response.json();
         setMentors(dummyMentors);
-      } catch (error) {
-        console.error("Failed to fetch mentors:", error);
+      } catch (err) {
+        console.error("Failed to fetch mentors:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchCategories = async () => {
+      try {
+        setCategories(dummyCategories);
+      } catch (err) {
+        console.error("카테고리 데이터 불러오기 실패:", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchMentors();
+    fetchCategories();
   }, []);
 
   const filteredMentors = mentors.filter(
