@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Camera, Loader2, User } from "lucide-react";
+import { Camera, Loader2, User } from 'lucide-react';
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -46,7 +46,7 @@ export default function UserPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [formData, setFormData] = useState<User | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -102,24 +102,16 @@ export default function UserPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setFormData(userData);
-    setShowConfirmDialog(true);
-  };
-
-  const handleConfirmSave = async () => {
-    if (!formData) return;
-
+  const handleSave = async () => {
+    setIsSaving(true);
     try {
-      setIsSaving(true);
       // API call to backend
       const response = await fetch(`/api/users/${Number(id)}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(userData),
       });
 
       if (!response.ok) {
@@ -133,7 +125,6 @@ export default function UserPage() {
           title: "수정 완료",
           description: "프로필 정보가 성공적으로 업데이트되었습니다.",
         });
-        setUserData(formData);
         setIsEditing(false);
       } else {
         throw new Error(data.message || "Failed to update profile");
@@ -144,7 +135,6 @@ export default function UserPage() {
         title: "수정 실패",
         description: "프로필 정보 업데이트 중 오류가 발생했습니다.",
       });
-      setIsEditing(true);
     } finally {
       setIsSaving(false);
       setShowConfirmDialog(false);
@@ -205,7 +195,7 @@ export default function UserPage() {
                 <p className="text-muted-foreground">{userData.email}</p>
               </div>
               <Separator />
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-6">
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="name">이름</Label>
@@ -268,8 +258,9 @@ export default function UserPage() {
                   {isEditing ? (
                     <>
                       <Button
-                        type="submit"
+                        type="button"
                         className="w-24"
+                        onClick={() => setShowConfirmDialog(true)}
                         disabled={isUploading || isSaving}
                       >
                         {isSaving ? (
@@ -298,7 +289,7 @@ export default function UserPage() {
                     </Button>
                   )}
                 </div>
-              </form>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -316,7 +307,7 @@ export default function UserPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel disabled={isSaving}>취소</AlertDialogCancel>
-              <AlertDialogAction onClick={handleConfirmSave}>
+              <AlertDialogAction onClick={handleSave} disabled={isSaving}>
                 확인
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -326,3 +317,4 @@ export default function UserPage() {
     </div>
   );
 }
+
